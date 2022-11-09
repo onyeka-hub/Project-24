@@ -9,7 +9,7 @@ Use AWS CLI to create an S3 bucket
 
 1. Create a file – backend.tf
 
-# Configure S3 Backend
+### Configure S3 Backend
 terraform {
   backend "s3" {
     bucket         = "onyi-terraform-state"
@@ -21,7 +21,7 @@ terraform {
 
 2. Create a file – network.tf and provision Elastic IP for Nat Gateway, VPC, Private and public subnets.
 
-# reserve Elastic IP to be used in our NAT gateway
+### reserve Elastic IP to be used in our NAT gateway
 resource "aws_eip" "nat_gw_elastic_ip" {
 vpc = true
 
@@ -39,24 +39,24 @@ cidr = var.main_network_block
 azs  = data.aws_availability_zones.available_azs.names
 
 private_subnets = [
-# this loop will create a one-line list as ["10.0.0.0/20", "10.0.16.0/20", "10.0.32.0/20", ...]
-# with a length depending on how many Zones are available
+#### this loop will create a one-line list as ["10.0.0.0/20", "10.0.16.0/20", "10.0.32.0/20", ...]
+#### with a length depending on how many Zones are available
 for zone_id in data.aws_availability_zones.available_azs.zone_ids :
 cidrsubnet(var.main_network_block, var.subnet_prefix_extension, tonumber(substr(zone_id, length(zone_id) - 1, 1)) - 1)
 ]
 
 public_subnets = [
-# this loop will create a one-line list as ["10.0.128.0/20", "10.0.144.0/20", "10.0.160.0/20", ...]
-# with a length depending on how many Zones are available
-# there is a zone Offset variable, to make sure no collisions are present with private subnet blocks
+#### this loop will create a one-line list as ["10.0.128.0/20", "10.0.144.0/20", "10.0.160.0/20", ...]
+#### with a length depending on how many Zones are available
+#### there is a zone Offset variable, to make sure no collisions are present with private subnet blocks
 for zone_id in data.aws_availability_zones.available_azs.zone_ids :
 cidrsubnet(var.main_network_block, var.subnet_prefix_extension, tonumber(substr(zone_id, length(zone_id) - 1, 1)) + var.zone_offset - 1)
 ]
 
-# Enable single NAT Gateway to save some money
-# WARNING: this could create a single point of failure, since we are creating a NAT Gateway in one AZ only
-# feel free to change these options if you need to ensure full Availability without the need of running 'terraform apply'
-# reference: https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/2.44.0#nat-gateway-scenarios
+### Enable single NAT Gateway to save some money
+#### WARNING: this could create a single point of failure, since we are creating a NAT Gateway in one AZ only
+#### feel free to change these options if you need to ensure full Availability without the need of running 'terraform apply'
+#### reference: https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/2.44.0#nat-gateway-scenarios
 enable_nat_gateway     = true
 single_nat_gateway     = true
 one_nat_gateway_per_az = false
@@ -64,7 +64,7 @@ enable_dns_hostnames   = true
 reuse_nat_ips          = true
 external_nat_ip_ids    = [aws_eip.nat_gw_elastic_ip.id]
 
-# Add VPC/Subnet tags required by EKS
+### Add VPC/Subnet tags required by EKS
 tags = {
 "kubernetes.io/cluster/${var.cluster_name}" = "shared"
 iac_environment                             = var.iac_environment_tag
@@ -97,7 +97,7 @@ iac_environment                             = var.iac_environment_tag
 
 3. Create a file – variables.tf
 
-# create some variables
+### create some variables
 variable "cluster_name" {
 type        = string
 description = "EKS cluster name."
@@ -125,7 +125,7 @@ description = "CIDR block bits extension offset to calculate Public subnets, avo
 
 4. Create a file – data.tf – This will pull the available AZs for use.
 
-# get all available AZs in our region
+### get all available AZs in our region
 data "aws_availability_zones" "available_azs" {
 state = "available"
 }
@@ -146,14 +146,14 @@ module "eks_cluster" {
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access = true
 
-  # Self Managed Node Group(s)
+  #### Self Managed Node Group(s)
   self_managed_node_group_defaults = {
     instance_type                          = var.asg_instance_types[0]
     update_launch_template_default_version = true
   }
   self_managed_node_groups = local.self_managed_node_groups
 
-  # aws-auth configmap
+  #### aws-auth configmap
   create_aws_auth_configmap = true
   manage_aws_auth_configmap = true
   aws_auth_users = concat(local.admin_user_map_users, local.developer_user_map_users)
@@ -165,7 +165,7 @@ module "eks_cluster" {
 
 6. Create a file – locals.tf to create local variables. Terraform does not allow assigning variable to variables. There is good reasons for that to avoid repeating your code unecessarily. So a terraform way to achieve this would be to use locals so that your code can be kept DRY
 
-# render Admin & Developer users list with the structure required by EKS module
+### render Admin & Developer users list with the structure required by EKS module
 locals {
   admin_user_map_users = [
     for admin_user in var.admin_users :
@@ -221,7 +221,7 @@ locals {
 
 7. Add more variables to the variables.tf file
 
-# create some variables
+### create some variables
 variable "admin_users" {
   type        = list(string)
   description = "List of Kubernetes admins."
@@ -251,7 +251,7 @@ main_network_block      = "10.0.0.0/16"
 subnet_prefix_extension = 4
 zone_offset             = 8
 
-# Ensure that these users already exist in AWS IAM. Another approach is that you can introduce an iam.tf file to manage users separately, get the data source and interpolate their ARN.
+#### Ensure that these users already exist in AWS IAM. Another approach is that you can introduce an iam.tf file to manage users separately, get the data source and interpolate their ARN.
 admin_users                    = ["darey", "solomon"]
 developer_users                = ["leke", "david"]
 asg_instance_types             = [ { instance_type = "t3.small" }, { instance_type = "t2.small" }, ]
@@ -289,7 +289,7 @@ Let fix the problem in the next section.
 To fix this problem
 
 1. Append to the file data.tf
-# get EKS cluster info to configure Kubernetes and Helm providers
+#### get EKS cluster info to configure Kubernetes and Helm providers
 data "aws_eks_cluster" "cluster" {
   name = module.eks_cluster.cluster_id
 }
@@ -298,7 +298,7 @@ data "aws_eks_cluster_auth" "cluster" {
 }
 
 2. Append to the file provider.tf
-# get EKS authentication for being able to manage k8s objects from terraform
+#### get EKS authentication for being able to manage k8s objects from terraform
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
@@ -306,7 +306,7 @@ provider "kubernetes" {
 }
 
 3. Run the init and plan again – This time you will see
-  # module.eks-cluster.kubernetes_config_map.aws_auth[0] will be created
+  #### module.eks-cluster.kubernetes_config_map.aws_auth[0] will be created
   + resource "kubernetes_config_map" "aws_auth" {
       + data = {
           + "mapAccounts" = jsonencode([])
@@ -358,112 +358,6 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 aws eks update-kubecofig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 
 **Note**: The above eks module version deploys kubernates version 1.22 which is an older version that requires some plugins before it can worfk successfully. Therefore we will use the eks module latset version at https://github.com/onyeka-hub/terraform-eks-module-official.git
-
-
-DEPLOY JENKINS WITH HELM
-Before we begin to develop our own helm charts, lets make use of publicly available charts to deploy all the tools that we need.
-
-One of the amazing things about helm is the fact that you can deploy applications that are already packaged from a public helm repository directly with very minimal configuration. An example is Jenkins.
-
-Visit Artifact Hub to find packaged applications as Helm Charts
-Search for Jenkins
-Add the repository to helm so that you can easily download and deploy
-helm repo add jenkins https://charts.jenkins.io
-Update helm repo
-helm repo update 
-Install the chart
-helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file]
-You should see an output like this
-
-NAME: jenkins
-LAST DEPLOYED: Sun Aug  1 12:38:53 2021
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-NOTES:
-1. Get your 'admin' user password by running:
-  kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
-2. Get the Jenkins URL to visit by running these commands in the same shell:
-  echo http://127.0.0.1:8080
-  kubectl --namespace default port-forward svc/jenkins 8080:8080
-
-3. Login with the password from step 1 and the username: admin
-4. Configure security realm and authorization strategy
-5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: http:///configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos
-
-For more information on running Jenkins on Kubernetes, visit:
-https://cloud.google.com/solutions/jenkins-on-container-engine
-
-For more information about Jenkins Configuration as Code, visit:
-https://jenkins.io/projects/jcasc/
-
-NOTE: Consider using a custom image with pre-installed plugins
-Check the Helm deployment
-helm ls --kubeconfig [kubeconfig file]
-Output:
-
-NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
-jenkins default         1               2021-08-01 12:38:53.429471 +0100 BST    deployed        jenkins-3.5.9   2.289.3 
-Check the pods
-kubectl get pods --kubeconfigo [kubeconfig file]
-Output:
-
-NAME        READY   STATUS    RESTARTS   AGE
-jenkins-0   2/2     Running   0          6m14s
-Describe the running pod (review the output and try to understand what you see)
-
-kubectl describe pod jenkins-0 --kubeconfig [kubeconfig file]
-Check the logs of the running pod
-
-kubectl logs jenkins-0 --kubeconfig [kubeconfig file]
-You will notice an output with an error
-
-error: a container name must be specified for pod jenkins-0, choose one of: [jenkins config-reload] or one of the init containers: [init]
-This is because the pod has a Sidecar container alongside with the Jenkins container. As you can see fromt he error output, there is a list of containers inside the pod [jenkins config-reload] i.e jenkins and config-reload containers. The job of the config-reload is mainly to help Jenkins to reload its configuration without recreating the pod.
-
-Therefore we need to let kubectl know, which pod we are interested to see its log. Hence, the command will be updated like:
-
-kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
-Now lets avoid calling the [kubeconfig file] everytime. Kubectl expects to find the default kubeconfig file in the location ~/.kube/config. But what if you already have another cluster using that same file? It doesn’t make sense to overwrite it. What you will do is to merge all the kubeconfig files together using a kubectl plugin called [konfig](https://github.com/corneliusweig/konfig) and select whichever one you need to be active.
-
-Install a package manager for kubectl called krew so that it will enable you to install plugins to extend the functionality of kubectl. Read more about it [Here](https://github.com/kubernetes-sigs/krew)
-
-Install the [konfig plugin](https://github.com/corneliusweig/konfig)
-
-  kubectl krew install konfig
-Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
-
-  sudo kubectl konfig import --save  [kubeconfig file]
-Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
-
-  kubectl config get-contexts
-Set the current context to use for all kubectl and helm commands
-
-  kubectl config use-context [name of EKS cluster]
-Test that it is working without specifying the --kubeconfig flag
-
-  kubectl get po
-Output:
-
-  NAME        READY   STATUS    RESTARTS   AGE
-  jenkins-0   2/2     Running   0          84m
-Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
-
-  kubectl config current-context
-Now that we can use kubectl without the --kubeconfig flag, Lets get access to the Jenkins UI. (In later projects we will further configure Jenkins. For now, it is to set up all the tools we need)
-
-There are some commands that was provided on the screen when Jenkins was installed with Helm. See number 5 above. Get the password to the admin user
-  kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
-Use port forwarding to access Jenkins from the UI
-  kubectl --namespace default port-forward svc/jenkins 8080:8080
-
-
-Go to the browser localhost:8080 and authenticate with the username and password from number 1 above
-
-
-
-
-
 
 ## HELM
 
@@ -667,3 +561,105 @@ Archived mychart-0.1.-.tgz
 You can also use helm to help you find issues with your chart's formatting or information:
 $ helm lint mychart
 No issues found
+
+DEPLOY JENKINS WITH HELM
+Before we begin to develop our own helm charts, lets make use of publicly available charts to deploy all the tools that we need.
+
+One of the amazing things about helm is the fact that you can deploy applications that are already packaged from a public helm repository directly with very minimal configuration. An example is Jenkins.
+
+Visit Artifact Hub to find packaged applications as Helm Charts
+Search for Jenkins
+Add the repository to helm so that you can easily download and deploy
+helm repo add jenkins https://charts.jenkins.io
+Update helm repo
+helm repo update 
+Install the chart
+helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file]
+You should see an output like this
+
+NAME: jenkins
+LAST DEPLOYED: Sun Aug  1 12:38:53 2021
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get your 'admin' user password by running:
+  kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+2. Get the Jenkins URL to visit by running these commands in the same shell:
+  echo http://127.0.0.1:8080
+  kubectl --namespace default port-forward svc/jenkins 8080:8080
+
+3. Login with the password from step 1 and the username: admin
+4. Configure security realm and authorization strategy
+5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: http:///configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos
+
+For more information on running Jenkins on Kubernetes, visit:
+https://cloud.google.com/solutions/jenkins-on-container-engine
+
+For more information about Jenkins Configuration as Code, visit:
+https://jenkins.io/projects/jcasc/
+
+NOTE: Consider using a custom image with pre-installed plugins
+Check the Helm deployment
+helm ls --kubeconfig [kubeconfig file]
+Output:
+
+NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+jenkins default         1               2021-08-01 12:38:53.429471 +0100 BST    deployed        jenkins-3.5.9   2.289.3 
+Check the pods
+kubectl get pods --kubeconfigo [kubeconfig file]
+Output:
+
+NAME        READY   STATUS    RESTARTS   AGE
+jenkins-0   2/2     Running   0          6m14s
+Describe the running pod (review the output and try to understand what you see)
+
+kubectl describe pod jenkins-0 --kubeconfig [kubeconfig file]
+Check the logs of the running pod
+
+kubectl logs jenkins-0 --kubeconfig [kubeconfig file]
+You will notice an output with an error
+
+error: a container name must be specified for pod jenkins-0, choose one of: [jenkins config-reload] or one of the init containers: [init]
+This is because the pod has a Sidecar container alongside with the Jenkins container. As you can see fromt he error output, there is a list of containers inside the pod [jenkins config-reload] i.e jenkins and config-reload containers. The job of the config-reload is mainly to help Jenkins to reload its configuration without recreating the pod.
+
+Therefore we need to let kubectl know, which pod we are interested to see its log. Hence, the command will be updated like:
+
+kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
+Now lets avoid calling the [kubeconfig file] everytime. Kubectl expects to find the default kubeconfig file in the location ~/.kube/config. But what if you already have another cluster using that same file? It doesn’t make sense to overwrite it. What you will do is to merge all the kubeconfig files together using a kubectl plugin called [konfig](https://github.com/corneliusweig/konfig) and select whichever one you need to be active.
+
+Install a package manager for kubectl called krew so that it will enable you to install plugins to extend the functionality of kubectl. Read more about it [Here](https://github.com/kubernetes-sigs/krew)
+
+Install the [konfig plugin](https://github.com/corneliusweig/konfig)
+
+  kubectl krew install konfig
+Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
+
+  sudo kubectl konfig import --save  [kubeconfig file]
+Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
+
+  kubectl config get-contexts
+Set the current context to use for all kubectl and helm commands
+
+  kubectl config use-context [name of EKS cluster]
+Test that it is working without specifying the --kubeconfig flag
+
+  kubectl get po
+Output:
+
+  NAME        READY   STATUS    RESTARTS   AGE
+  jenkins-0   2/2     Running   0          84m
+Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
+
+  kubectl config current-context
+Now that we can use kubectl without the --kubeconfig flag, Lets get access to the Jenkins UI. (In later projects we will further configure Jenkins. For now, it is to set up all the tools we need)
+
+There are some commands that was provided on the screen when Jenkins was installed with Helm. See number 5 above. Get the password to the admin user
+  kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+Use port forwarding to access Jenkins from the UI
+  kubectl --namespace default port-forward svc/jenkins 8080:8080
+
+
+Go to the browser localhost:8080 and authenticate with the username and password from number 1 above
+
+
