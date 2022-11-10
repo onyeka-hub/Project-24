@@ -1,0 +1,6 @@
+name: cart
+image_name: nginx
+image_tag: "stable-perl"
+replicaCount: 5
+appName: nginx
+containerPort: 80
