@@ -625,7 +625,7 @@ Port forward the service
 ```
 kubectl port-forward svc/nginx-service 8003:80 -n dev
 ```
-![auth page](./images/auth-helm-deploy-page.PNG)
+![auth page](./images/tooling-app-helm-deploy-page.PNG)
 
 To list the release do : helm list or helm ls
 To list all the objects : kubectl get all -n namespace
