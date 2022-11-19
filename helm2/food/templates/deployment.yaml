@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-deployment"
+  labels:
+    app: {{ .Release.Name | quote }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/nginx-configmap.yaml") . | sha256sum }}
+      labels:
+        app: {{ .Release.Name | quote }}
+    spec:
+      containers:
+      - name: {{ .Values.appName | quote }}
+        image: "{{ .Values.image_name }}:{{ .Values.image_tag }}"
+        ports:
+        - containerPort: {{ .Values.containerPort }}
+        volumeMounts:
+          - name: "{{ .Release.Name }}-config"
+            mountPath: /usr/share/nginx/html
+            readOnly: true
+      volumes:
+      - name: "{{ .Release.Name }}-config"
+        configMap:
+          name: "{{ .Release.Name }}-website-index-file"
+          items:
+          - key: index-file
+            path: index.html

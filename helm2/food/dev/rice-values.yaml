@@ -1,0 +1,6 @@
+name: rice-app
+image_name: nginx
+image_tag: "alpine"
+replicaCount: 3
+appName: nginx
+containerPort: 80
