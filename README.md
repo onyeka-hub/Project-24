@@ -481,12 +481,11 @@ A values.yaml file that is part of the chart itself. This typically provides def
 When providing configuration on the command line, you can either supply a file of configuration values using the -f flag. We will see a lot more on this later on.
 
 ### Create a chart
-It can create a new chart for you:
+Create a folder called helm and cd into the folder. Run the helm create command
+To create a new chart for you:
 
 helm create <chart name>
-Created mychart/
 
-Create a folder called helm and cd into the folder. Run the helm create command
 ```
 helm create ecommerce
 ```
@@ -512,7 +511,14 @@ We are going to generate a new content for our file. Therefore delete the conten
 #### To convert a pre-existing application into a helm chart
 Copy our existing yaml files for our kubernates objects/microservices such as the deployment.yaml, service.yaml, configmap.yaml, secret.yaml and paste into the template folder.
 
-#### helm template command
+### Helm --debug and --dry-run command
+When you want to test the template rendering, but not actually install anything, you can use
+```
+helm install --debug --dry-run <release name> <chart name>
+```
+This will render the templates. But instead of installing the chart, it will return the rendered template to you so you can see the output.
+
+#### Helm template command
 This is used to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
 ```
 helm template <chart name>
@@ -997,19 +1003,22 @@ helm repo update
 ```
 helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file] -n dev
 ```
+Path to the kubeconfig file: C:/Users/ONYEKA/.kube/config
+helm install jenkins jenkins/jenkins --kubeconfig C:/Users/ONYEKA/.kube/config -n dev
+
 You should see an output like this
 ```
 NAME: jenkins
-LAST DEPLOYED: Sun Aug  1 12:38:53 2021
+LAST DEPLOYED: Thu Nov 10 19:26:11 2022
 NAMESPACE: dev
 STATUS: deployed
 REVISION: 1
 NOTES:
 1. Get your 'admin' user password by running:
-  kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+  
 2. Get the Jenkins URL to visit by running these commands in the same shell:
   echo http://127.0.0.1:8080
-  kubectl --namespace default port-forward svc/jenkins 8080:8080
+  kubectl --namespace dev port-forward svc/jenkins 8080:8080
 
 3. Login with the password from step 1 and the username: admin
 4. Configure security realm and authorization strategy
@@ -1020,6 +1029,7 @@ https://cloud.google.com/solutions/jenkins-on-container-engine
 
 For more information about Jenkins Configuration as Code, visit:
 https://jenkins.io/projects/jcasc/
+
 
 NOTE: Consider using a custom image with pre-installed plugins
 ```
@@ -1036,7 +1046,7 @@ jenkins dev            1               2021-08-01 12:38:53.429471 +0100 BST    d
 
 7. Check the pods
 ```
-kubectl get pods --kubeconfigo [kubeconfig file]
+kubectl get pods --kubeconfig [kubeconfig file]
 ```
 Output:
 
@@ -1107,10 +1117,10 @@ kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
   kubectl --namespace default port-forward svc/jenkins 8080:8080
   ```
 
-
   3. Go to the browser localhost:8080 and authenticate with the username and password from number 1 above
 
-QUICK TASK FOR YOU
+### QUICK TASK FOR YOU
+
 Now setup the following tools using Helm
 This section will be quite challenging for you because you will need to spend some time to research the charts, read their documentations and understand how to get an application running in your cluster by simply running a helm install command.
 
@@ -1119,6 +1129,7 @@ Hashicorp Vault
 Prometheus
 Grafana
 Elasticsearch ELK using ECK
+
 Succesfully installing all the 5 tools is a great experience to have. But, joining the Masterclass you will be able to see how this should be done end to end.
 
 In the next project,
@@ -1128,3 +1139,19 @@ Configure Ingress for all the tools and applications running in the cluster
 Integrate Secrets management using Hashicorp Vault
 Integrate Logging with ELK
 Inetegrate monitoring with Prometheus and Grafana
+
+
+
+
+
+volumeClaimTemplates:
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gp2"
+      resources:
+        requests:
+          storage: 1Gi
+
+
