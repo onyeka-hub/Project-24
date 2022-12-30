@@ -383,7 +383,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 aws eks update-kubecofig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 
-**Note**: The above eks module version deploys kubernates version 1.22 which is an older version that requires some plugins before it can worfk successfully. Therefore we will use the eks module latset version at https://github.com/onyeka-hub/terraform-eks-module-official.git
+**Note**: The above eks module version deploys kubernates version 1.22 which is an older version that requires some plugins before it can worfk successfully. Therefore we will use the eks module latest version at https://github.com/onyeka-hub/terraform-eks-module-official.git
 
 ## HELM
 
@@ -515,11 +515,13 @@ Copy our existing yaml files for our kubernates objects/microservices such as th
 When you want to test the template rendering, but not actually install anything, you can use
 ```
 helm install --debug --dry-run <release name> <chart name>
+OR
+helm upgrade -install --debug --dry-run <release name> <chart name>
 ```
 This will render the templates. But instead of installing the chart, it will return the rendered template to you so you can see the output.
 
 #### Helm template command
-This works the same as --debug and --dry-run command and is flsused to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
+This works the same as --debug and --dry-run command and is wused to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
 ```
 helm template <chart name>
 ```
@@ -898,7 +900,7 @@ TEST SUITE: None
 ![configmap change](./images/upgraded-configmap-auth.PNG)
 
 ### To authomatically roll out new pod when a configmap changes
-By default in kubernates, when a configmap changes, pods are not authomatically updated/restarted andf some application might need to restart to pick up newconfig file. So when a configmap changes the pods in kubernates wont authomatically pick up the new changes. We can use helm template generation capabilities to overcome this issue and it allows us to forcely roll out new pods when the configmap changes. To do this update the annotations in the deployment.yaml file as below
+By default in kubernates, when a configmap changes, pods are not authomatically updated/restarted and some application might need to restart to pick up new config file. So when a configmap changes the pods in kubernates wont authomatically pick up the new changes. We can use helm template generation capabilities to overcome this issue and it allows us to forcely roll out new pods when the configmap changes. To do this update the annotations in the deployment.yaml file as below
 
 ```
 deployment.yaml

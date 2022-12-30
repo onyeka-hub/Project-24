@@ -1,4 +1,4 @@
-name: food-app
+name: finance
 image_name: nginx
 image_tag: "latest"
 replicaCount: 2

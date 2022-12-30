@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  name: "{{ .Release.Name }}-ingress"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "{{ .Release.Name }}.onyeka.ga"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Release.Name }}-nginx-service"
+            port:
+              number: 80
+
+  # tls:
+  # - hosts:
+  #   - "{{ .Values.app_name }}.onyeka.ga"
+  #   secretName: "{{ .Values.app_name }}.onyeka.ga"
