@@ -1017,7 +1017,9 @@ helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file] -n de
 ```
 Path to the kubeconfig file: C:/Users/ONYEKA/.kube/config
 
+```
 helm install jenkins jenkins/jenkins --kubeconfig C:/Users/ONYEKA/.kube/config -n dev
+```
 
 You should see an output like this
 ```
@@ -1063,9 +1065,10 @@ jenkins dev            1               2021-08-01 12:38:53.429471 +0100 BST    d
 kubectl get pods --kubeconfig [kubeconfig file]
 ```
 Output:
-
+```
 NAME        READY   STATUS    RESTARTS   AGE
 jenkins-0   2/2     Running   0          6m14s
+```
 
 8. Describe the running pod (review the output and try to understand what you see)
 ```
