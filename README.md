@@ -29,11 +29,11 @@ resource "aws_eip" "nat_gw_elastic_ip" {
 vpc = true
 
 tags = {
-Name            = "${var.cluster_name}-nat-eip"
-iac_environment = var.iac_environment_tag
-}
-}
-Create VPC using the official AWS module
+    Name            = "${var.cluster_name}-nat-eip"
+    iac_environment = var.iac_environment_tag
+    }
+  }
+# Create VPC using the official AWS module
 module "vpc" {
 source  = "terraform-aws-modules/vpc/aws"
 
@@ -69,20 +69,20 @@ external_nat_ip_ids    = [aws_eip.nat_gw_elastic_ip.id]
 
 # Add VPC/Subnet tags required by EKS
 tags = {
-"kubernetes.io/cluster/${var.cluster_name}" = "shared"
-iac_environment                             = var.iac_environment_tag
-}
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    iac_environment                             = var.iac_environment_tag
+    }
 public_subnet_tags = {
-"kubernetes.io/cluster/${var.cluster_name}" = "shared"
-"kubernetes.io/role/elb"                    = "1"
-iac_environment                             = var.iac_environment_tag
-}
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                    = "1"
+    iac_environment                             = var.iac_environment_tag
+    }
 private_subnet_tags = {
-"kubernetes.io/cluster/${var.cluster_name}" = "shared"
-"kubernetes.io/role/internal-elb"           = "1"
-iac_environment                             = var.iac_environment_tag
-}
-}
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"           = "1"
+    iac_environment                             = var.iac_environment_tag
+    }
+  }
 ```
 
 **Note**: The tags added to the subnets is very important. The Kubernetes Cloud Controller Manager (cloud-controller-manager) and AWS Load Balancer Controller (aws-load-balancer-controller) needs to identify the cluster’s. To do that, it querries the cluster’s subnets by using the tags as a filter.
@@ -104,28 +104,28 @@ iac_environment                             = var.iac_environment_tag
 ```
 # create some variables
 variable "cluster_name" {
-type        = string
-description = "EKS cluster name."
+    type        = string
+    description = "EKS cluster name."
 }
 variable "iac_environment_tag" {
-type        = string
-description = "AWS tag to indicate environment name of each infrastructure object."
+    type        = string
+    description = "AWS tag to indicate environment name of each infrastructure object."
 }
 variable "name_prefix" {
-type        = string
-description = "Prefix to be used on each infrastructure object Name created in AWS."
+    type        = string
+    description = "Prefix to be used on each infrastructure object Name created in AWS."
 }
 variable "main_network_block" {
-type        = string
-description = "Base CIDR block to be used in our VPC."
+    type        = string
+    description = "Base CIDR block to be used in our VPC."
 }
 variable "subnet_prefix_extension" {
-type        = number
-description = "CIDR block bits extension to calculate CIDR blocks of each subnetwork."
+    type        = number
+    description = "CIDR block bits extension to calculate CIDR blocks of each subnetwork."
 }
 variable "zone_offset" {
-type        = number
-description = "CIDR block bits extension offset to calculate Public subnets, avoiding collisions with Private subnets."
+    type        = number
+    description = "CIDR block bits extension offset to calculate Public subnets, avoiding collisions with Private subnets."
 }
 ```
 
@@ -134,7 +134,7 @@ description = "CIDR block bits extension offset to calculate Public subnets, avo
 ```
 # get all available AZs in our region
 data "aws_availability_zones" "available_azs" {
-state = "available"
+    state = "available"
 }
 data "aws_caller_identity" "current" {} # used for accesing Account ID and ARN
 ```
@@ -381,7 +381,9 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 4. Create kubeconfig file using awscli.
 
+```
 aws eks update-kubecofig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
+```
 
 **Note**: The above eks module version deploys kubernates version 1.22 which is an older version that requires some plugins before it can worfk successfully. Therefore we will use the eks module latest version at https://github.com/onyeka-hub/terraform-eks-module-official.git
 
