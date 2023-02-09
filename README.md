@@ -405,6 +405,7 @@ Behind the scenes, a helm chart is essentially a bunch of YAML manifests that de
 
 ### Lets begin to gradually walk through how to use Helm
 Parameterising YAML manifests using Helm templates
+
 Let’s consider that our Tooling app have been Dockerised into an image called tooling-app, and that you wish to deploy with Kubernetes. Without helm, you would create the YAML manifests defining the deployment, service, and ingress, and apply them to your Kubernetes cluster using kubectl apply. Initially, your application is version 1, and so the Docker image is tagged as tooling-app:1.0.0. A simple deployment manifest might look something like the following:
 
 ```
@@ -523,7 +524,7 @@ helm upgrade -install --debug --dry-run <release name> <chart name>
 This will render the templates. But instead of installing the chart, it will return the rendered template to you so you can see the output.
 
 #### Helm template command
-This works the same as --debug and --dry-run command and is wused to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
+This works the same as --debug and --dry-run command and is used to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
 ```
 helm template <chart name>
 ```
@@ -638,8 +639,11 @@ kubectl port-forward svc/nginx-service 8003:80 -n dev
 ![auth page](./images/tooling-app-helm-deploy-page.PNG)
 
 To list the release do : helm list or helm ls
+
 To list all the objects : kubectl get all -n namespace
+
 To get the configmap: kubectl get cm
+
 To get the secret: kubectl get secret
 
 ### Values file
@@ -677,7 +681,8 @@ Example: helm upgrade auth helm --set deployment.tag=1.2.3
 ### To make our chart more generic and re-usable
 This is to inject all the custom name for all the object in the yaml file.
 Example: For the follwing object, replace `nginx-deployment` in all the files and inject `"{{ .values.name }}"`. 
-Inside ecommerce folder create three folders for dev, staging and prod. Inside dev folder create two value files, auth-values.yaml and cart-values.yaml for both auth and cart microservices. Copy of values.yaml file into the two yaml files.
+
+Inside ecommerce folder create three folders for dev, staging and prod. Inside dev folder create two value files, auth-values.yaml and cart-values.yaml for both auth and cart microservices. Copy the values.yaml file into the two yaml files.
 
 In all the yaml files replace all the common items/names with variables and there subsequent values in the values.yaml file. Below are the deployment.yaml, nginx-service.yaml, nginx-configmap.yaml and the values.yaml files: 
 
@@ -857,7 +862,7 @@ Update the configmap with the below code:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: website-index-file
+  name: "{{ .Values.name }}-website-index-file"
 data:
   # file to be mounted inside a volume
   index-file: |
@@ -902,7 +907,7 @@ TEST SUITE: None
 ![configmap change](./images/upgraded-configmap-auth.PNG)
 
 ### To authomatically roll out new pod when a configmap changes
-By default in kubernates, when a configmap changes, pods are not authomatically updated/restarted and some application might need to restart to pick up new config file. So when a configmap changes the pods in kubernates wont authomatically pick up the new changes. We can use helm template generation capabilities to overcome this issue and it allows us to forcely roll out new pods when the configmap changes. To do this update the annotations in the deployment.yaml file as below
+By default in kubernates, when a configmap changes, pods are not authomatically updated/restarted and some application might need to restart to pick up new config file. So when a configmap changes the pods in kubernates wont authomatically pick up the new changes. We can use helm template generation capabilities to overcome this issue and it allows us to forcefuly roll out new pods when the configmap changes. To do this update the annotations in the deployment.yaml file as below
 
 ```
 deployment.yaml
@@ -981,10 +986,13 @@ cart    dev             1               2022-11-10 17:30:09.4578455 +0100 WAT   
 The helm tool has several commands for working with charts.
 
 Once you have edited a chart, helm can package it into a chart archive for you:
+
 $ helm package mychart
 Archived mychart-0.1.-.tgz
 
+
 You can also use helm to help you find issues with your chart's formatting or information:
+
 $ helm lint mychart
 No issues found
 
@@ -1008,6 +1016,7 @@ helm repo update
 helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file] -n dev
 ```
 Path to the kubeconfig file: C:/Users/ONYEKA/.kube/config
+
 helm install jenkins jenkins/jenkins --kubeconfig C:/Users/ONYEKA/.kube/config -n dev
 
 You should see an output like this
