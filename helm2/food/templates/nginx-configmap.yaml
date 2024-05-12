@@ -8,7 +8,7 @@ data:
     <!DOCTYPE html>
     <html>
     <head>
-    <title>Ruth my sunshine!</title>
+    <title>Onyeka's world!</title>
     <style>
     html { color-scheme: light dark; }
     body { width: 35em; margin: 0 auto;
@@ -16,7 +16,7 @@ data:
     </style>
     </head>
     <body>
-    <h1>Ruth my sunshine!</h1>
+    <h1>Onyeka's world!</h1>
     <p>If you see this page, the nginx web server is successfully installed and
     working. Further configuration is required.</p>
 

@@ -417,7 +417,7 @@ metadata:
     app: tooling-app
 spec:
   replicas: 3
-  strategy: 
+  Onu: 
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
@@ -452,7 +452,7 @@ metadata:
     app: "{{ template "name" . }}"
 spec:
   replicas: 3
-  strategy: 
+  Onu: 
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
@@ -922,7 +922,7 @@ spec:
 This will check for any changes in  the configmap and roll out new pods with the new config files in the event of any chage in the configuration file.
 
 ### To create another different release with the chart
-Because our application is generic, it can be used to deploy another copy of it or another micrservice.
+Because our application is generic, it can be used to deploy another copy of it or another microservice.
 In side the dev folder earlier created, create two files. auth-values.yaml and cart-values.yaml. The values.yaml will be used as default values file when no file is specified during run time either with --values or --set commands. To install a new release, run helm install or upgrade and point the values to the respective values with the --values command.
 
 ```
@@ -949,11 +949,11 @@ Helm provides a way to perform an install-or-upgrade as a single command. Use he
 Run: helm upgrade --install <release name> <chart name> --values <absolute path of the values file> 
 
 ```
-helm upgrade --install auth ecommerce --values C:/Users/ONYEKA/OneDrive/Documents/onyeka-workspace/Project-24/helm/ecommerce/dev/auth-values.yaml -n dev
+helm upgrade --install auth ecommerce/ --values ecommerce/dev/auth-values.yaml -n dev
 ```
 And for the second microservice
 ```
-helm upgrade --install cart ecommerce --values C:/Users/ONYEKA/OneDrive/Documents/onyeka-workspace/Project-24/helm/ecommerce/dev/cart-values.yaml -n dev
+helm upgrade --install cart ecommerce/ --values ecommerce/dev/cart-values.yaml -n dev
 ```
 
 ```
@@ -1037,7 +1037,7 @@ NOTES:
   kubectl --namespace dev port-forward svc/jenkins 8080:8080
 
 3. Login with the password from step 1 and the username: admin
-4. Configure security realm and authorization strategy
+4. Configure security realm and authorization Onu
 5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: http:///configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos
 
 For more information on running Jenkins on Kubernetes, visit:
