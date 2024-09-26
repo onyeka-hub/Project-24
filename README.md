@@ -9,7 +9,7 @@ Use AWS CLI to create an S3 bucket
 
 1. Create a file – backend.tf
 
-```
+```yaml
 ### Configure S3 Backend
 terraform {
   backend "s3" {
@@ -23,7 +23,7 @@ terraform {
 
 2. Create a file – network.tf and provision Elastic IP for Nat Gateway, VPC, Private and public subnets.
 
-```
+```yaml
 # reserve Elastic IP to be used in our NAT gateway
 resource "aws_eip" "nat_gw_elastic_ip" {
 vpc = true
@@ -101,7 +101,7 @@ private_subnet_tags = {
 
 3. Create a file – variables.tf
 
-```
+```yaml
 # create some variables
 variable "cluster_name" {
     type        = string
@@ -131,7 +131,7 @@ variable "zone_offset" {
 
 4. Create a file – data.tf – This will pull the available AZs for use.
 
-```
+```yaml
 # get all available AZs in our region
 data "aws_availability_zones" "available_azs" {
     state = "available"
@@ -143,7 +143,7 @@ data "aws_caller_identity" "current" {} # used for accesing Account ID and ARN
 
 5. Create a file – eks.tf and provision EKS cluster (Create the file only if you are not using your existing Terraform code. Otherwise you can simply append it to the main.tf from your existing code) Read more about this module from the official documentation here – Reading it will help you understand more about the rich features of the module.
 
-```
+```yaml
 module "eks_cluster" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 18.0"
@@ -174,7 +174,7 @@ module "eks_cluster" {
 
 6. Create a file – locals.tf to create local variables. Terraform does not allow assigning variable to variables. There is good reasons for that to avoid repeating your code unecessarily. So a terraform way to achieve this would be to use locals so that your code can be kept DRY
 
-```
+```yaml
 # render Admin & Developer users list with the structure required by EKS module
 locals {
   admin_user_map_users = [
@@ -232,7 +232,7 @@ locals {
 
 7. Add more variables to the variables.tf file
 
-```
+```yaml
 # create some variables
 variable "admin_users" {
   type        = list(string)
@@ -257,7 +257,7 @@ variable "autoscaling_maximum_size_by_az" {
 
 8. Create a file – variables.tfvars to set values for variables.
 
-```
+```yaml
 cluster_name            = "tooling-app-eks"
 iac_environment_tag     = "development"
 name_prefix             = "darey-io-eks"
@@ -275,7 +275,7 @@ autoscaling_maximum_size_by_az = 10
 
 9. Create file – provider.tf
 
-```
+```yaml
 provider "aws" {
   region = "us-west-1"
 }
@@ -309,7 +309,7 @@ To fix this problem
 
 1. Append to the file data.tf
 
-```
+```yaml
 # get EKS cluster info to configure Kubernetes and Helm providers
 data "aws_eks_cluster" "cluster" {
   name = module.eks_cluster.cluster_id
@@ -320,7 +320,7 @@ data "aws_eks_cluster_auth" "cluster" {
 ```
 
 2. Append to the file provider.tf
-```
+```yaml
 # get EKS authentication for being able to manage k8s objects from terraform
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
@@ -381,8 +381,10 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 4. Create kubeconfig file using awscli.
 
-```
-aws eks update-kubecofig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
+```sh
+aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
+
+aws eks update-kubeconfig --name onyeka-eks-version-19-20-0 --region us-east-2 
 ```
 
 **Note**: The above eks module version deploys kubernates version 1.22 which is an older version that requires some plugins before it can worfk successfully. Therefore we will use the eks module latest version at https://github.com/onyeka-hub/terraform-eks-module-official.git
@@ -395,7 +397,7 @@ In Project 23, you experienced the use of manifest files to define and deploy re
 
 A Helm chart is a definition of the resources that are required to run an application in Kubernetes. Instead of having to think about all of the various deployments/services/volumes/configmaps/ etc that make up your application, you can use a command like
 
-```
+```sh
 helm install stable/mysql
 ```
 
@@ -408,7 +410,7 @@ Parameterising YAML manifests using Helm templates
 
 Let’s consider that our Tooling app have been Dockerised into an image called tooling-app, and that you wish to deploy with Kubernetes. Without helm, you would create the YAML manifests defining the deployment, service, and ingress, and apply them to your Kubernetes cluster using kubectl apply. Initially, your application is version 1, and so the Docker image is tagged as tooling-app:1.0.0. A simple deployment manifest might look something like the following:
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -443,7 +445,7 @@ Helm tackles this by splitting the configuration of a chart out from its basic d
 
 For example, a simple templated version of the previous deployment might look like the following:
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -474,8 +476,10 @@ spec:
 This example demonstrates a number of features of Helm templates:
 
 The template is based on YAML, with {{ }} mustache syntax defining dynamic sections.
-Helm provides various variables that are populated at install time. For example, the {{.Release.Name}} allows you to change the name of the resource at runtime by using the release name. Installing a Helm chart creates a release (this is a Helm concept rather than a Kubernetes concept).
-You can define helper methods in external files. The {{template "name"}} call gets a safe name for the app, given the name of the Helm chart (but which can be overridden). By using helper functions, you can reduce the duplication of static values (like tooling-app), and hopefully reduce the risk of typos.
+
+Helm provides various variables that are populated at install time. For example, the {{.Release.Name}} allows you to change the name of the resource at runtime by using the release name. Installing a Helm chart creates a release (this is a Helm concept rather than a Kubernetes concept). You can define helper methods in external files.
+
+The {{template "name"}} call gets a safe name for the app, given the name of the Helm chart (but which can be overridden). By using helper functions, you can reduce the duplication of static values (like tooling-app), and hopefully reduce the risk of typos.
 
 You can manually provide configuration at runtime. The {{.Values.image.name}} value for example is taken from a set of default values, or from values provided when you call helm install. There are many different ways to provide the configuration values needed to install a chart using Helm. Typically, you would use two approaches:
 
@@ -484,12 +488,11 @@ A values.yaml file that is part of the chart itself. This typically provides def
 When providing configuration on the command line, you can either supply a file of configuration values using the -f flag. We will see a lot more on this later on.
 
 ### Create a chart
-Create a folder called helm and cd into the folder. Run the helm create command
-To create a new chart for you:
-
+Create a folder called helm and cd into the folder. Run the helm create command to create a new chart for you:
+```sh
 helm create chart-name
 
-```
+#Example
 helm create ecommerce
 ```
 where ecommerce is the name of the chart. 
@@ -516,7 +519,7 @@ Copy our existing yaml files for our kubernates objects/microservices such as th
 
 ### Helm --debug and --dry-run command
 When you want to test the template rendering, but not actually install anything, you can use
-```
+```sh
 helm install --debug --dry-run <release name> <chart name>
 OR
 helm upgrade -install --debug --dry-run <release name> <chart name>
@@ -525,12 +528,12 @@ This will render the templates. But instead of installing the chart, it will ret
 
 #### Helm template command
 This works the same as --debug and --dry-run command and is used to test if the chart is rendered correctly. This is a powerful tool/command that allows us to test our template by spitting out the raw kubernates yaml files, so we can make sure its OK. If any thing is wrong with our template, the helm template command will bring out an error.
-```
+```sh
 helm template <chart name>
 ```
 
-```
-$ helm template ecommerce
+```sh
+helm template ecommerce
 ---
 # Source: ecommerce/templates/nginx-configmap.yaml
 apiVersion: v1
@@ -615,7 +618,7 @@ spec:
 #### Install chart
 
 helm install <release name> <chart name>
-```
+```sh
 helm install auth ecommerce -n dev
 ```
 
@@ -632,8 +635,9 @@ $ helm ls -n dev
 NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                    APP VERSION
 auth             dev             1               2022-11-09 16:39:24.1509851 +0100 WAT   deployed        example-app-0.0.1        1.0.0
 ```
+
 Port forward the service
-```
+```sh
 kubectl port-forward svc/nginx-service 8003:80 -n dev
 ```
 ![auth page](./images/tooling-app-helm-deploy-page.PNG)
@@ -652,7 +656,7 @@ Example: In the dseployment.yaml file, where you have `image: nginx:1.2.3` can b
 
 In the values.yaml file, put
 
-```
+```yaml
 deployment:
   image: "nginx"
   tag: "latest"
@@ -661,7 +665,7 @@ deployment:
 Run the helm upgrade command
 helm  upgrade <release name> <chart name> -n dev
 
-```
+```sh
 helm upgrade auth ecommerce -n dev
 ```
 ```
@@ -680,13 +684,14 @@ Example: helm upgrade auth helm --set deployment.tag=1.2.3
 
 ### To make our chart more generic and re-usable
 This is to inject all the custom name for all the object in the yaml file.
+
 Example: For the follwing object, replace `nginx-deployment` in all the files and inject `"{{ .values.name }}"`. 
 
 Inside ecommerce folder create three folders for dev, staging and prod. Inside dev folder create two value files, auth-values.yaml and cart-values.yaml for both auth and cart microservices. Copy the values.yaml file into the two yaml files.
 
 In all the yaml files replace all the common items/names with variables and there subsequent values in the values.yaml file. Below are the deployment.yaml, nginx-service.yaml, nginx-configmap.yaml and the values.yaml files: 
 
-```
+```yaml
 # deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -722,7 +727,7 @@ spec:
             path: index.html
 ```
 
-```
+```yaml
 # nginx-service.yaml
 apiVersion: v1
 kind: Service
@@ -737,7 +742,7 @@ spec:
       targetPort: 80
 ```
 
-```
+```yaml
 # nginx-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -771,7 +776,7 @@ data:
     </html>
 ```
 
-```
+```yaml
 name: auth
 image_name: nginx
 image_tag: "alpine"
@@ -783,7 +788,7 @@ containerPort: 80
 Run : helm template ecommerce
 
 Output
-```
+```yaml
 ---
 # Source: ecommerce/templates/nginx-configmap.yaml
 apiVersion: v1
@@ -852,13 +857,13 @@ spec:
 ```
 Delete the previous release and install a new one
 
-```
+```sh
 helm install auth ecommerce -n dev
 ```
 ### Upgrading our App
 Update the configmap with the below code:
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -889,8 +894,9 @@ data:
     </body>
     </html>
 ```
+
 Run helm upgrade
-```
+```sh
 helm upgrade auth ecommerce -n dev
 ```
 Output
@@ -909,7 +915,7 @@ TEST SUITE: None
 ### To authomatically roll out new pod when a configmap changes
 By default in kubernates, when a configmap changes, pods are not authomatically updated/restarted and some application might need to restart to pick up new config file. So when a configmap changes the pods in kubernates wont authomatically pick up the new changes. We can use helm template generation capabilities to overcome this issue and it allows us to forcefuly roll out new pods when the configmap changes. To do this update the annotations in the deployment.yaml file as below
 
-```
+```yaml
 deployment.yaml
 
 kind: Deployment
@@ -925,7 +931,7 @@ This will check for any changes in  the configmap and roll out new pods with the
 Because our application is generic, it can be used to deploy another copy of it or another microservice.
 In side the dev folder earlier created, create two files. auth-values.yaml and cart-values.yaml. The values.yaml will be used as default values file when no file is specified during run time either with --values or --set commands. To install a new release, run helm install or upgrade and point the values to the respective values with the --values command.
 
-```
+```yaml
 # auth-values.yaml
 name: auth
 image_name: nginx
@@ -948,11 +954,11 @@ Helm provides a way to perform an install-or-upgrade as a single command. Use he
 
 Run: helm upgrade --install <release name> <chart name> --values <absolute path of the values file> 
 
-```
+```sh
 helm upgrade --install auth ecommerce/ --values ecommerce/dev/auth-values.yaml -n dev
 ```
 And for the second microservice
-```
+```sh
 helm upgrade --install cart ecommerce/ --values ecommerce/dev/cart-values.yaml -n dev
 ```
 
@@ -1004,20 +1010,20 @@ One of the amazing things about helm is the fact that you can deploy application
 1. Visit Artifact Hub to find packaged applications as Helm Charts
 2. Search for Jenkins
 3. Add the repository to helm so that you can easily download and deploy
-```
+```sh
 helm repo add jenkins https://charts.jenkins.io
 ```
 4. Update helm repo
-```
+```sh
 helm repo update 
 ```
 5. Install the chart
-```
+```sh
 helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file] -n dev
 ```
 Path to the kubeconfig file: C:/Users/ONYEKA/.kube/config
 
-```
+```sh
 helm install jenkins jenkins/jenkins --kubeconfig C:/Users/ONYEKA/.kube/config -n dev
 ```
 
@@ -1051,7 +1057,7 @@ NOTE: Consider using a custom image with pre-installed plugins
 ```
 
 6. Check the Helm deployment
-```
+```sh
 helm ls --kubeconfig [kubeconfig file]
 ```
 Output:
@@ -1061,7 +1067,7 @@ jenkins dev            1               2021-08-01 12:38:53.429471 +0100 BST    d
 ```
 
 7. Check the pods
-```
+```sh
 kubectl get pods --kubeconfig [kubeconfig file]
 ```
 Output:
@@ -1071,11 +1077,11 @@ jenkins-0   2/2     Running   0          6m14s
 ```
 
 8. Describe the running pod (review the output and try to understand what you see)
-```
+```sh
 kubectl describe pod jenkins-0 --kubeconfig [kubeconfig file]
 ```
 9. Check the logs of the running pod
-```
+```sh
 kubectl logs jenkins-0 --kubeconfig [kubeconfig file]
 ```
 You will notice an output with an error
@@ -1085,7 +1091,7 @@ error: a container name must be specified for pod jenkins-0, choose one of: [jen
 This is because the pod has a Sidecar container alongside with the Jenkins container. As you can see from the error output, there is a list of containers inside the pod [jenkins config-reload] i.e jenkins and config-reload containers. The job of the config-reload is mainly to help Jenkins to reload its configuration without recreating the pod.
 
 Therefore we need to let kubectl know, which pod we are interested to see its log. Hence, the command will be updated like:
-```
+```sh
 kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
 ```
 
@@ -1094,45 +1100,45 @@ kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
   1. Install a package manager for kubectl called krew so that it will enable you to install plugins to extend the functionality of kubectl. Read more about it [Here](https://github.com/kubernetes-sigs/krew)
 
   2. Install the [konfig plugin](https://github.com/corneliusweig/konfig)
-  ```
-    kubectl krew install konfig
-  ```
+```sh
+kubectl krew install konfig
+```
   3. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
-  ```
-    sudo kubectl konfig import --save  [kubeconfig file]
-  ```
+```sh
+sudo kubectl konfig import --save  [kubeconfig file]
+```
   4. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
-  ```
-    kubectl config get-contexts
-  ```
+```sh
+kubectl config get-contexts
+```
   5. Set the current context to use for all kubectl and helm commands
-  ```
-    kubectl config use-context [name of EKS cluster]
-  ```
+```sh
+kubectl config use-context [name of EKS cluster]
+```
   6. Test that it is working without specifying the --kubeconfig flag
-  ```
-    kubectl get po
-  ```
+```sh
+kubectl get po
+```
   Output:
 
     NAME        READY   STATUS    RESTARTS   AGE
     jenkins-0   2/2     Running   0          84m
 
   7. Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
-  ```
-    kubectl config current-context
-  ```
+```sh
+kubectl config current-context
+```
 
 11. Now that we can use kubectl without the --kubeconfig flag, Lets get access to the Jenkins UI. (In later projects we will further configure Jenkins. For now, it is to set up all the tools we need)
 
   1. There are some commands that was provided on the screen when Jenkins was installed with Helm. See number 5 above. Get the password to the admin user
-  ```
-  kubectl exec --namespace dev -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
-  ```
+```sh
+kubectl exec --namespace dev -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+```
   2. Use port forwarding to access Jenkins from the UI
-  ```
-  kubectl --namespace dev port-forward svc/jenkins 8080:8080
-  ```
+```sh
+kubectl --namespace dev port-forward svc/jenkins 8080:8080
+```
 
   3. Go to the browser localhost:8080 and authenticate with the username and password from number 1 above
 
